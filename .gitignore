@@ -1,0 +1,17 @@
+thresholds.json
+.env
+
+__pycache__/
+pyvenv.cfg
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+build/
+dist/
+.DS_Store
+bin/
+include/
+lib/
+
