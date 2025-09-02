@@ -232,10 +232,8 @@ def main():
         try:
             with open("thresholds.json", "r") as f:
                 thresholds = json.load(f)
-            upper_percentage = thresholds.get("upper_percentage", 0)
-            lower_percentage = thresholds.get("lower_percentage", 0)
-
-            # Read thresholds from JSON file
+            
+            percentage = thresholds.get("percentage", 100)
             upper_threshold = thresholds.get("upper_threshold")
             lower_threshold = thresholds.get("lower_threshold")
 
@@ -243,14 +241,26 @@ def main():
                 print("Thresholds not found in thresholds.json. Skipping threshold check.")
                 return
 
-            print(f"Monitoring ETH/WBTC ratio against thresholds: {lower_threshold:.8f} - {upper_threshold:.8f})")
+            # Calculate adjusted thresholds based on percentage
+            if percentage < 100:
+                average_threshold = (upper_threshold + lower_threshold) / 2
+                upper_diff = upper_threshold - average_threshold
+                lower_diff = average_threshold - lower_threshold
+                
+                adjusted_upper_threshold = average_threshold + (upper_diff * percentage / 100)
+                adjusted_lower_threshold = average_threshold - (lower_diff * percentage / 100)
+            else:
+                adjusted_upper_threshold = upper_threshold
+                adjusted_lower_threshold = lower_threshold
 
-            # Check if ratio is outside thresholds
-            if eth_wbtc_ratio > upper_threshold:
-                message = f"📈 ETH/WBTC ratio is above the upper threshold!\n\nCurrent Ratio: {eth_wbtc_ratio:.8f}\nUpper Threshold: {upper_threshold:.8f}"
+            print(f"Monitoring ETH/WBTC ratio against adjusted thresholds: {adjusted_lower_threshold:.8f} - {adjusted_upper_threshold:.8f})")
+
+            # Check if ratio is outside adjusted thresholds
+            if eth_wbtc_ratio > adjusted_upper_threshold:
+                message = f"📈 ETH/WBTC ratio is above the adjusted upper threshold!\n\nCurrent Ratio: {eth_wbtc_ratio:.8f}\nAdjusted Upper Threshold: {adjusted_upper_threshold:.8f}"
                 send_telegram_notification(message)
-            elif eth_wbtc_ratio < lower_threshold:
-                message = f"📉 ETH/WBTC ratio is below the lower threshold!\n\nCurrent Ratio: {eth_wbtc_ratio:.8f}\nLower Threshold: {lower_threshold:.8f}"
+            elif eth_wbtc_ratio < adjusted_lower_threshold:
+                message = f"📉 ETH/WBTC ratio is below the adjusted lower threshold!\n\nCurrent Ratio: {eth_wbtc_ratio:.8f}\nAdjusted Lower Threshold: {adjusted_lower_threshold:.8f}"
                 send_telegram_notification(message)
 
         except FileNotFoundError:
